@@ -1,0 +1,2 @@
+zabbix_generation: zabbix-agent2
+zabbix_repo_url: https://repo.zabbix.com/zabbix/5.4/rhel/7/x86_64/zabbix-agent2-5.4.7-1.el7.x86_64.rpm

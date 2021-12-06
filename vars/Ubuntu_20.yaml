@@ -1,0 +1,4 @@
+zabbix_version: 5.4
+zabbix_generation: zabbix-agent2
+https://repo.zabbix.com/zabbix/{{ zabbix_version }}/ubuntu/pool/main/z/zabbix-release/zabbix-release_{{ zabbix_version }}-1%2Bubuntu20.04_all.deb
+

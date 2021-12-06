@@ -1,0 +1,90 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: yes
+  tasks:
+
+  - name: gather os specific variables
+    include_vars: "{{ item }}"
+    with_first_found:
+        "vars/{{ ansible_distribution }}_{{ ansible_distribution_major_version }}.yaml"
+
+  - name: gather generation specific variables
+    set_fact: configname="zabbix_agent2"
+    when: zabbix_generation == "zabbix-agent2"
+  - name: gather generation specific variables2
+    set_fact: configname="zabbix_agentd"
+    when: zabbix_generation == "zabbix-agent"
+
+  - debug:
+          var: configname
+
+  - block: #Block Ubuntu/Debian
+
+    - name: Add ca-serts
+      apt:
+          name: ca-certificates
+          state: latest
+
+    - name: Add Zabbix repo apt-key
+      apt_key:
+        url: https://repo.zabbix.com/zabbix-official-repo.key
+        state: present
+
+    - name: Install a .deb package from the internet
+      apt:
+          deb: "{{ zabbix_repo_url}}"
+          force: yes
+
+    - name: "Install Zabbix agent "
+      apt:
+          name: "{{ zabbix_generation }}"
+          state: "latest"
+          update_cache: yes
+
+    when: ansible_os_family == "Debian"
+
+
+  - block: # Centos/RedhHat
+    
+    - name: Add ca-serts
+      yum:
+          name: ca-certificates
+          state: present
+
+    - name: Add Zabbix repo RPM key
+      rpm_key:
+          state: present
+          key: https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX
+
+    - name: Install .rpm package
+      yum:
+          name: "{{ zabbix_repo_url}}"
+          state: present
+          validate_certs: yes
+
+    - name: Install Zabbix agent
+      yum:
+          name: "{{ zabbix_generation }}"
+          state: present
+
+    when: ansible_os_family == "RedHat"
+
+  - name: Create new zabbix config file from template
+    template:
+        src: "./templates/{{ configname }}.conf.j2"
+        dest: "/etc/zabbix/{{ configname }}.conf"
+    notify: "Restart service zabbix-agent"
+
+
+  - name: Start service zabbix-agent
+    service:
+        name: "{{ zabbix_generation }}"
+        state: started
+        enabled: yes
+
+  handlers:
+  - name: Restart service zabbix-agent
+    service: 
+        name: "{{ zabbix_generation }}"
+        state: restarted

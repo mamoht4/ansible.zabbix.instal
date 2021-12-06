@@ -1,0 +1,8 @@
+PidFile=/run/zabbix/zabbix_agentd.pid
+LogFile=/var/log/zabbix/zabbix_agentd.log
+#LogFileSize=0
+Server=192.168.0.56
+ServerActive=192.168.0.56
+Hostname={{ ansible_hostname }}
+Include=/etc/zabbix/zabbix_agentd.conf.d/*.conf
+DenyKey=system.run[*]
